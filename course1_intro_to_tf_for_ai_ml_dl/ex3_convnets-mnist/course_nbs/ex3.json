@@ -1,0 +1,223 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "colab_type": "text",
+    "id": "iQjHqsmTAVLU"
+   },
+   "source": [
+    "## Exercise 3\n",
+    "In the videos you looked at how you would improve Fashion MNIST using Convolutions. For your exercise see if you can improve MNIST to 99.8% accuracy or more using only a single convolutional layer and a single MaxPooling 2D. You should stop training once the accuracy goes above this amount. It should happen in less than 20 epochs, so it's ok to hard code the number of epochs for training, but your training must end once it hits the above metric. If it doesn't, then you'll need to redesign your layers.\n",
+    "\n",
+    "I've started the code for you -- you need to finish it!\n",
+    "\n",
+    "When 99.8% accuracy has been hit, you should print out the string \"Reached 99.8% accuracy so cancelling training!\"\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1.14.0\n"
+     ]
+    }
+   ],
+   "source": [
+    "import tensorflow as tf\n",
+    "print(tf.__version__)\n",
+    "from os import path, getcwd, chdir\n",
+    "from tensorflow import keras\n",
+    "\n",
+    "# DO NOT CHANGE THE LINE BELOW. If you are developing in a local\n",
+    "# environment, then grab mnist.npz from the Coursera Jupyter Notebook\n",
+    "# and place it inside a local folder and edit the path to that location\n",
+    "path = f\"{getcwd()}/../tmp2/mnist.npz\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "config = tf.ConfigProto()\n",
+    "config.gpu_options.allow_growth = True\n",
+    "sess = tf.Session(config=config)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# GRADED FUNCTION: train_mnist_conv\n",
+    "def train_mnist_conv():\n",
+    "    # Please write your code only where you are indicated.\n",
+    "    # please do not remove model fitting inline comments.\n",
+    "\n",
+    "    # YOUR CODE STARTS HERE\n",
+    "    class myCallback(keras.callbacks.Callback):\n",
+    "        def on_epoch_end(self, epoch, logs={}):\n",
+    "            if(logs.get(\"acc\") >= 0.998):\n",
+    "                print(\"\\nReached 99.8% accuracy so cancelling training!\")\n",
+    "                self.model.stop_training = True\n",
+    "    # YOUR CODE ENDS HERE\n",
+    "\n",
+    "    mnist = tf.keras.datasets.mnist\n",
+    "    (training_images, training_labels), (test_images, test_labels) = mnist.load_data(path=path)\n",
+    "    # YOUR CODE STARTS HERE\n",
+    "    training_images = training_images.reshape(60000, 28, 28, 1)\n",
+    "    traininig_images = training_images/255.0\n",
+    "    \n",
+    "    test_images = test_images.reshape(10000, 28, 28, 1 )\n",
+    "    test_images = test_images/255.0\n",
+    "    # YOUR CODE ENDS HERE\n",
+    "\n",
+    "    model = tf.keras.models.Sequential([\n",
+    "            # YOUR CODE STARTS HERE\n",
+    "            keras.layers.Conv2D(256, (3,3), activation=\"relu\", input_shape=(28, 28, 1)),\n",
+    "            keras.layers.MaxPooling2D(2,2),\n",
+    "            keras.layers.Flatten(),\n",
+    "            keras.layers.Dense(256, activation = \"relu\"),\n",
+    "            keras.layers.Dense(128, activation = \"relu\"),\n",
+    "            keras.layers.Dense(64, activation = \"relu\"),\n",
+    "            keras.layers.Dense(32, activation = \"relu\"),\n",
+    "            keras.layers.Dense(10, activation = \"softmax\")\n",
+    "            # YOUR CODE ENDS HERE\n",
+    "    ])\n",
+    "\n",
+    "    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])\n",
+    "    # model fitting\n",
+    "    callbacks = myCallback()\n",
+    "    history = model.fit(\n",
+    "        # YOUR CODE STARTS HERE\n",
+    "        training_images, training_labels, epochs = 20, callbacks = [callbacks], batch_size = 128\n",
+    "        # YOUR CODE ENDS HERE\n",
+    "    )\n",
+    "    # model fitting\n",
+    "    return history.epoch, history.history['acc'][-1]\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Epoch 1/20\n",
+      "60000/60000 [==============================] - 6s 107us/sample - loss: 0.7263 - acc: 0.9076\n",
+      "Epoch 2/20\n",
+      "60000/60000 [==============================] - 6s 100us/sample - loss: 0.0709 - acc: 0.9789\n",
+      "Epoch 3/20\n",
+      "60000/60000 [==============================] - 6s 102us/sample - loss: 0.0418 - acc: 0.9873\n",
+      "Epoch 4/20\n",
+      "60000/60000 [==============================] - 6s 99us/sample - loss: 0.0291 - acc: 0.9906\n",
+      "Epoch 5/20\n",
+      "60000/60000 [==============================] - 6s 99us/sample - loss: 0.0236 - acc: 0.9924\n",
+      "Epoch 6/20\n",
+      "60000/60000 [==============================] - 6s 100us/sample - loss: 0.0190 - acc: 0.9936\n",
+      "Epoch 7/20\n",
+      "60000/60000 [==============================] - 6s 99us/sample - loss: 0.0174 - acc: 0.9944\n",
+      "Epoch 8/20\n",
+      "60000/60000 [==============================] - 6s 100us/sample - loss: 0.0188 - acc: 0.9944\n",
+      "Epoch 9/20\n",
+      "60000/60000 [==============================] - 6s 102us/sample - loss: 0.0161 - acc: 0.9947\n",
+      "Epoch 10/20\n",
+      "60000/60000 [==============================] - 6s 102us/sample - loss: 0.0151 - acc: 0.9951\n",
+      "Epoch 11/20\n",
+      "60000/60000 [==============================] - 6s 103us/sample - loss: 0.0095 - acc: 0.9967\n",
+      "Epoch 12/20\n",
+      "60000/60000 [==============================] - 6s 100us/sample - loss: 0.0139 - acc: 0.9957\n",
+      "Epoch 13/20\n",
+      "60000/60000 [==============================] - 6s 102us/sample - loss: 0.0103 - acc: 0.9966s - loss: 0.\n",
+      "Epoch 14/20\n",
+      "60000/60000 [==============================] - 6s 102us/sample - loss: 0.0125 - acc: 0.9960\n",
+      "Epoch 15/20\n",
+      "60000/60000 [==============================] - 6s 101us/sample - loss: 0.0073 - acc: 0.9977\n",
+      "Epoch 16/20\n",
+      "60000/60000 [==============================] - 6s 99us/sample - loss: 0.0085 - acc: 0.9974\n",
+      "Epoch 17/20\n",
+      "60000/60000 [==============================] - 6s 99us/sample - loss: 0.0129 - acc: 0.9962\n",
+      "Epoch 18/20\n",
+      "59392/60000 [============================>.] - ETA: 0s - loss: 0.0066 - acc: 0.9980\n",
+      "Reached 99.8% accuracy so cancelling training!\n",
+      "60000/60000 [==============================] - 6s 100us/sample - loss: 0.0066 - acc: 0.9980\n"
+     ]
+    }
+   ],
+   "source": [
+    "_, _ = train_mnist_conv()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Now click the 'Submit Assignment' button above.\n",
+    "# Once that is complete, please run the following two cells to save your work and close the notebook"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%javascript\n",
+    "<!-- Save the notebook -->\n",
+    "IPython.notebook.save_checkpoint();"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "%%javascript\n",
+    "IPython.notebook.session.delete();\n",
+    "window.onbeforeunload = null\n",
+    "setTimeout(function() { window.close(); }, 1000);"
+   ]
+  }
+ ],
+ "metadata": {
+  "coursera": {
+   "course_slug": "introduction-tensorflow",
+   "graded_item_id": "ml06H",
+   "launcher_item_id": "hQF8A"
+  },
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.6.8"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 1
+}
